@@ -1,5 +1,5 @@
 // Запустить сервер ./web-mongo
-// Выполнить тестовый код go test .
+// Выполнить go test .
 
 package main
 
