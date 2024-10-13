@@ -1,0 +1,9 @@
+services:
+
+  server:
+    build:
+      context: ./web-mongo
+    container_name: web-mongo_app
+    command: sh -c "go test ." && sh -c "go test --bench=." && sh -c "go run web-mongo"
+    ports:
+      - 8017:8017
