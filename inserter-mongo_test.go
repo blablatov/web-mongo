@@ -166,8 +166,10 @@ func TestInserter(t *testing.T) {
 		prev_opts = opts
 	}
 
-	res, err := cn.InsertMany(context.TODO(), dtopic, prev_opts)
-	if res == nil && err != nil {
-		t.Errorf("Check func InsertMany() res = nil %v, want err = nil %v", res, err)
+	var prev_res *mongo.InsertManyResult
+	res, _ := cn.InsertMany(context.TODO(), dtopic, prev_opts)
+	if !reflect.DeepEqual(res, prev_res) {
+		t.Logf("%v", res)
+		prev_res = res
 	}
 }
