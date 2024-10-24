@@ -28,16 +28,11 @@ type insertMongo struct {
 
 var inserts = []insertMongo{}
 
-// TODO мапа для возвращаемых данных. Map to return data
-var (
-	mu     sync.Mutex
-	insMap = make(map[string]insertMongo)
-)
-
-func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []string, error) {
+var inserter = func(dsnMongo string, stu mgoChat) ([]string, []string, error) {
 	var err error
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dsnMongo))
 
 	// Отложенное отключение, после создания клиента. Waiting disconnect
@@ -79,8 +74,8 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 	//////////////////////////////
 	// Поиск _id для user_1 и user_2 в БД, подставляется в документ topics
 	// Seeks _id for user_1 && user_2 to mongo
-	fd := new(findMongo)
-	in.id1, in.id2, err = fd.idFinder(dsnMongo, stu)
+
+	m.id1, m.id2, err = idFinder(dsnMongo, stu)
 	if err != nil {
 		log.Printf("Error find of _id: %v", err)
 		return nil, nil, err
@@ -134,7 +129,7 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 			"delid":         0,
 			"createdat":     stu.User_1.Datetime,
 			"lastmessageat": stu.User_1.Datetime,
-			"owner":         in.id1,
+			"owner":         m.id1,
 			"public": bson.M{
 				"fn":   "gotov_chat",
 				"note": "hello chat",
@@ -227,7 +222,7 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 				"delid":         0,
 				"createdat":     stu.User_2.Datetime,
 				"lastmessageat": stu.User_2.Datetime,
-				"owner":         in.id2,
+				"owner":         m.id2,
 				"public": bson.M{
 					"fn":   "gotov_chat",
 					"note": "hello chat",
@@ -275,7 +270,6 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 	//////////////////////////////
 	// Вставка документа subscriptions для user_1
 	chsb1 := make(chan []string, 1)
-	//var sb1 []string
 
 	wg.Add(1)
 	go func() {
@@ -311,11 +305,11 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 
 		subscript := []interface{}{
 			bson.M{
-				"_id":       m.gid1 + ":" + in.id1, // подставляется сгенеренный _id (topic) и _id из users
+				"_id":       m.gid1 + ":" + m.id1, // подставляется сгенеренный _id (topic) и _id из users
 				"createdat": stu.User_1.Datetime,
 				"updatedat": stu.User_1.Datetime,
 				"deletedat": nil,
-				"user":      in.id1, // подставляется _id из users
+				"user":      m.id1,  // подставляется _id из users
 				"topic":     m.gid1, //подставляется сгенеренный _id (topic)
 				"recvseqid": 0,
 				"readseqid": 0,
@@ -394,11 +388,11 @@ func (in *insertMongo) inserter(dsnMongo string, stu mgoChat) ([]string, []strin
 
 		subscript := []interface{}{
 			bson.M{
-				"_id":       m.gid2 + ":" + in.id2, // подставляется сгенеренный _id (topic) и _id из users
+				"_id":       m.gid2 + ":" + m.id2, // подставляется сгенеренный _id (topic) и _id из users
 				"createdat": stu.User_2.Datetime,
 				"updatedat": stu.User_2.Datetime,
 				"deletedat": nil,
-				"user":      in.id2, // подставляется _id из users
+				"user":      m.id2,  // подставляется _id из users
 				"topic":     m.gid2, //подставляется сгенеренный _id (topic)
 				"recvseqid": 0,
 				"readseqid": 0,

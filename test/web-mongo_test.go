@@ -1,7 +1,8 @@
+// e2e тест веб-сервера
 // Запустить сервер ./web-mongo
-// Выполнить go test .
+// go test .
 
-package main
+package test
 
 import (
 	"bytes"

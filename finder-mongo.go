@@ -65,7 +65,7 @@ func (*findMongo) finder(dsnMongo string, stu mgoChat) string {
 	}
 }
 
-func (*findMongo) idFinder(dsnMongo string, stu mgoChat) (string, string, error) {
+func idFinder(dsnMongo string, stu mgoChat) (string, string, error) {
 
 	var err error
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

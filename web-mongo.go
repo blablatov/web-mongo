@@ -142,8 +142,7 @@ func mgo(w http.ResponseWriter, r *http.Request) {
 				///////////////////////
 				// Вызов метода записи коллекций в mongodb.
 				// Call of insert method
-				ins := new(insertMongo)
-				sin1, sin2, err := ins.inserter(dsnMongo, stu)
+				sin1, sin2, err := inserter(dsnMongo, stu)
 				if err != nil {
 					log.Printf("Error insert data: %v\n", err)
 					in.inerr = err

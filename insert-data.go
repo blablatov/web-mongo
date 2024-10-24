@@ -43,7 +43,7 @@ type TopicData struct {
 }
 
 var (
-	topic = []interface{}{
+	dtopic = []interface{}{
 		bson.M{"_id": "grpL6GdlEDQ3DM", // в Тиноде генерируется случайный _id
 			"createdat": bson.M{
 				"$date": "2024-07-11T05:57:51.202Z",
@@ -104,7 +104,7 @@ type SubscriptionsData struct {
 }
 
 var (
-	subscript = []interface{}{
+	dsubscript = []interface{}{
 		bson.M{"_id": "grpL6GdlEDQ3DM:HhlZaX2A80Y", // подставляется сгенеренный _id (topic) и _id из users
 			"createdat": bson.M{
 				"$date": "2024-07-11T05:57:51.202Z",
