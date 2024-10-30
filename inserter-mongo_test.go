@@ -176,7 +176,7 @@ func TestInserter(t *testing.T) {
 		}
 	}
 
-	testop := make([]string, 0, len(prev_result.InsertedIDs))
+	testop := make([]string, 0)
 	for _, v := range prev_result.InsertedIDs {
 		if v != nil {
 			testop = append(testop, v.(string))
