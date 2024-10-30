@@ -17,7 +17,7 @@ import (
 
 type findMongo struct{}
 
-func (*findMongo) finder(dsnMongo string, stu mgoChat) string {
+var finder = func(dsnMongo string, stu mgoChat) string {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -65,7 +65,7 @@ func (*findMongo) finder(dsnMongo string, stu mgoChat) string {
 	}
 }
 
-func idFinder(dsnMongo string, stu mgoChat) (string, string, error) {
+var idFinder = func(dsnMongo string, stu mgoChat) (string, string, error) {
 
 	var err error
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

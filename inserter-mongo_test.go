@@ -4,13 +4,11 @@ import (
 	"context"
 	"math/rand"
 	"reflect"
+	"testing"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"testing"
-
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func TestInserter(t *testing.T) {
@@ -38,50 +36,38 @@ func TestInserter(t *testing.T) {
 			t.Logf("%s", test.gid1)
 			prev_gid1 = test.gid1
 		}
-	}
 
-	var prev_gid2 string
-	for _, test := range gtests {
+		var prev_gid2 string
 		if test.gid2 != prev_gid2 {
 			t.Logf("%s", test.gid2)
 			prev_gid2 = test.gid2
 		}
-	}
 
-	var prev_id1 string
-	for _, test := range gtests {
+		var prev_id1 string
 		if test.id1 != prev_id1 {
 			t.Logf("%s", test.id1)
 			prev_id1 = test.id1
 		}
-	}
 
-	var prev_id2 string
-	for _, test := range gtests {
+		var prev_id2 string
 		if test.id2 != prev_id2 {
 			t.Logf("%v", test.id2)
 			prev_id2 = test.id2
 		}
-	}
 
-	var prev_intop2 []string
-	for _, test := range gtests {
+		var prev_intop2 []string
 		if test.intop2 != nil && prev_intop2 == nil {
 			t.Logf("%s", test.intop2)
 			prev_intop2 = test.intop2
 		}
-	}
 
-	var prev_insub1 []string
-	for _, test := range gtests {
+		var prev_insub1 []string
 		if test.insub1 != nil && prev_insub1 == nil {
 			t.Logf("%s", test.insub1)
 			prev_insub1 = test.insub1
 		}
-	}
 
-	var prev_insub2 []string
-	for _, test := range gtests {
+		var prev_insub2 []string
 		if test.insub2 != nil && prev_insub2 == nil {
 			t.Logf("%s\n", test.insub2)
 			prev_insub2 = test.insub2
@@ -166,10 +152,35 @@ func TestInserter(t *testing.T) {
 		prev_opts = opts
 	}
 
-	var prev_res *mongo.InsertManyResult
-	res, _ := cn.InsertMany(context.TODO(), dtopic, prev_opts)
-	if !reflect.DeepEqual(res, prev_res) {
-		t.Logf("%v", res)
-		prev_res = res
+	var prev_result *mongo.InsertManyResult
+	result, _ := cn.InsertMany(context.TODO(), dtopic, prev_opts)
+	if !reflect.DeepEqual(result, prev_result) {
+		t.Logf("%v", result)
+		prev_result = result
+	}
+
+	var sltest = []struct {
+		res interface{}
+	}{
+		{"result"},
+		{"result2"},
+		{"result3"},
+		{"result4"},
+	}
+
+	var prev_res interface{}
+	for _, test := range sltest {
+		if test.res != prev_res {
+			t.Logf("%v", test.res)
+			prev_res = test.res
+		}
+	}
+
+	testop := make([]string, 0, len(prev_result.InsertedIDs))
+	for _, v := range prev_result.InsertedIDs {
+		if v != nil {
+			testop = append(testop, v.(string))
+		}
+		t.Logf("%v", testop)
 	}
 }

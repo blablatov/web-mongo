@@ -39,7 +39,7 @@ http://localhost:8017/mgo/
 
 
 ### Сборка и тестирование
-[Содержание](https://github.com/blablatov/web-mongo#содержание)
+[:arrow_up:Содержание](#Содержание)  
 
 ```sh
 go build .
@@ -72,7 +72,7 @@ http://localhost:8017/mgo/
 
 
 ### Блок-схема сервиса
-[Содержание](https://github.com/blablatov/web-mongo#содержание)
+[:arrow_up:Содержание](#Содержание)  
 
 
 ```mermaid

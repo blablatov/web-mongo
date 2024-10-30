@@ -129,9 +129,9 @@ func mgo(w http.ResponseWriter, r *http.Request) {
 			///////////////////////
 			// Вызов метода поиска sid в коллекции users mongodb.
 			// Call of find method
-			fd := new(findMongo)
+			// fd := new(findMongo)
 
-			in.finres = fd.finder(dsnMongo, stu)
+			in.finres = finder(dsnMongo, stu)
 			if in.finres == "user_1 == user_2 - Second not found" ||
 				in.finres == "user_1||user_2||both - Not found" {
 				in.setweb = in.finres
