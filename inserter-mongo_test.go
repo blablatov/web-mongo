@@ -166,15 +166,20 @@ func TestInserter(t *testing.T) {
 		}
 
 		// Срез строковых значений с размером результата. Slice len of cursor
-		testop := make([]string, 0, len(prevResult.InsertedIDs))
-
-		// Формирование строкового слайса. Gets []string slice
-		for _, v := range prevResult.InsertedIDs {
-			if v != nil {
-				testop = append(testop, v.(string))
-			}
-			t.Logf("%v", testop)
+		mp := make(map[int]string)
+		mp = map[int]string{
+			1: "result1",
+			2: "result2",
+			3: "result3",
+			4: "result3",
 		}
 
+		sl := make([]string, 0, len(mp))
+		for _, v := range sl {
+			if v != "" {
+				sl = append(sl, v)
+			}
+			t.Logf("%v", sl)
+		}
 	}
 }
