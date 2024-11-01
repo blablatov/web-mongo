@@ -165,38 +165,16 @@ func TestInserter(t *testing.T) {
 			prevResult = result
 		}
 
-	}
+		// Срез строковых значений с размером результата. Slice len of cursor
+		testop := make([]string, 0, len(prevResult.InsertedIDs))
 
-	var sltest = []struct {
-		res string
-	}{
-		{"result1"},
-		{"result2"},
-		{"result3"},
-		{"result4"},
-	}
-
-	var prev_res string
-	for _, test := range sltest {
-		if test.res != prev_res {
-			t.Logf("%v", test.res)
-			prev_res = test.res
-		}
-
-		mp := make(map[int]string)
-		mp = map[int]string{
-			1: "result1",
-			2: "result2",
-			3: "result3",
-			4: "result3",
-		}
-
-		sl := make([]string, 0, len(mp))
-		for _, v := range sl {
-			if v != prev_res {
-				sl = append(sl, v)
+		// Формирование строкового слайса. Gets []string slice
+		for _, v := range prevResult.InsertedIDs {
+			if v != nil {
+				testop = append(testop, v.(string))
 			}
-			t.Logf("%v", sl)
+			t.Logf("%v", testop)
 		}
+
 	}
 }

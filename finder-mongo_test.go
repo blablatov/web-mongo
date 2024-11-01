@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"reflect"
 	"testing"
 	"time"
 
@@ -40,26 +39,17 @@ func TestFinder(t *testing.T) {
 		}
 	}()
 
-	cn := client.Database("gotest").Collection("users")
-	var pcn *mongo.Collection
-	if cn != pcn {
-		t.Logf("%v", cn)
-		pcn = cn
-	}
-	if !reflect.DeepEqual(pcn, cn) {
-		t.Errorf("Check client.Database() cn = nil %v, want = dtopic %v", pcn, dtopic)
-	}
-
 	var tests = []struct {
 		uuid   string
 		filter interface{}
 		opts   interface{}
 		values interface{}
+		want   bool
 	}{
-		{"3e266244-0e23-4f2e-8cb5-b4d118054222", nil, nil, nil},
-		{"3e266244-0e23-4f2e-8cb5-b4d118054111", nil, nil, nil},
-		{"3............00,,,,,,;;;;;;;;;;;;;00", nil, nil, nil},
-		{"    ", nil, nil, nil},
+		{"3e266244-0e23-4f2e-8cb5-b4d118054222", nil, nil, nil, true},
+		{"3e266244-0e23-4f2e-8cb5-b4d118054111", nil, nil, nil, true},
+		{"3............00,,,,,,;;;;;;;;;;;;;00", nil, nil, nil, true},
+		{"    ", nil, nil, nil, true},
 	}
 
 	var prevUuid string
@@ -87,6 +77,16 @@ func TestFinder(t *testing.T) {
 			t.Logf("%v", test.values)
 			prevValues = test.values
 			t.Logf("%v", prevValues)
+		}
+
+		cn := client.Database("gotest").Collection("topics")
+		if cn == nil {
+			t.Errorf("Check client.Database:(%v) = %v", cn, test.want)
+		}
+		var pcn *mongo.Collection
+		if cn != pcn {
+			t.Logf("%v", cn)
+			pcn = cn
 		}
 
 		filter := bson.D{{"tags", bson.D{{"$eq", prevUuid}}}}
