@@ -157,7 +157,7 @@ func TestInserter(t *testing.T) {
 
 		var prevResult *mongo.InsertManyResult
 		result, _ := cn.InsertMany(context.TODO(), dtopic, prevOpts)
-		if result == nil {
+		if result != nil {
 			t.Errorf("Check InsertManyRun:(%v) = %v", result, test.want)
 		}
 		if !reflect.DeepEqual(result, prevResult) {
