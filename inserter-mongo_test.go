@@ -13,6 +13,30 @@ import (
 
 func TestInserter(t *testing.T) {
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if ctx == nil && cancel != nil {
+		t.Errorf("Check func WithTimeout() ctx = nil %v, want cancel = nil %v", ctx, cancel)
+	}
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dsnMongo))
+	if client == nil && err != nil {
+		t.Errorf("Check func mongo.Connect() client = nil %v, want err = nil %v", client, err)
+	}
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			switch p := recover(); p {
+			case err != nil:
+				panic(err)
+				panic(p)
+			default:
+				panic(p)
+			}
+		} else {
+			t.Log("Disconnect not errors")
+		}
+	}()
+
 	saved := inserter
 	defer func() { inserter = saved }()
 
@@ -24,10 +48,12 @@ func TestInserter(t *testing.T) {
 		intop2 []string
 		insub1 []string
 		insub2 []string
+		key    int64
+		want   bool
 	}{
 		{"gid1", "gid2", "id1", "id2",
 			[]string{"newtopic"},
-			[]string{"3e266244-0e23-4f2e-8cb5-b4d118054222"}, []string{"3e266244-0e23-4f2e-8cb5-b4d118054222"}},
+			[]string{"3e266244-0e23-4f2e-8cb5-b4d118054222"}, []string{"3e266244-0e23-4f2e-8cb5-b4d118054222"}, 8765432123456, true},
 	}
 
 	var prev_gid1 string
@@ -72,115 +98,105 @@ func TestInserter(t *testing.T) {
 			t.Logf("%s\n", test.insub2)
 			prev_insub2 = test.insub2
 		}
-	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	if ctx == nil && cancel != nil {
-		t.Errorf("Check func WithTimeout() ctx = nil %v, want cancel = nil %v", ctx, cancel)
-	}
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dsnMongo))
-	if client == nil && err != nil {
-		t.Errorf("Check func mongo.Connect() client = nil %v, want err = nil %v", client, err)
-	}
-
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			switch p := recover(); p {
-			case err != nil:
-				panic(err)
-				panic(p)
-			default:
-				panic(p)
-			}
-		} else {
-			t.Log("Disconnect not errors")
-		}
-	}()
-
-	var ktest = []struct {
-		key int64
-	}{
-		{111},
-		{222222},
-		{333333333333},
-		{5555555555555555},
-	}
-
-	var prev_key int64
-	for _, test := range ktest {
+		var prev_key int64
 		if test.key != prev_key {
 			t.Logf("%v", test.key)
 			prev_key = test.key
 		}
 
 		var pkey int64
-		key := time.Now().UTC().UnixNano()
-		if !reflect.DeepEqual(key, pkey) {
-			t.Logf("%v", key)
-			pkey = key
+		if !reflect.DeepEqual(test.key, pkey) {
+			t.Logf("%v", test.key)
+			pkey = test.key
+		}
+		keygot := time.Now().UTC().UnixNano()
+		if keygot == 0 {
+			t.Errorf("Check UnixNano:(%v) = %v", pkey, test.want)
+		}
+
+		var prevKey int64
+		if test.key != prevKey {
+			t.Logf("%v", test.key)
+			test.key = prevKey
+		}
+		rngot := rand.New(rand.NewSource(keygot))
+		if rngot == nil {
+			t.Errorf("Check UnixNano:(%v) = %v", pkey, test.want)
 		}
 
 		var prng *rand.Rand
-		rng := rand.New(rand.NewSource(pkey))
-		if !reflect.DeepEqual(rng, prng) {
-			t.Logf("%v", rng)
-			prng = rng
+		if !reflect.DeepEqual(rngot, prng) {
+			t.Logf("%v", rngot)
+			prng = rngot
 		}
 
-		prev_gid1 = genTopicName(prng)
-		if prev_gid1 == "" {
-			t.Log("Error of generate string")
+		if got := genTopicName(prng); got == "" {
+			t.Errorf("Check genTopicName:(%v) = %v", prng, test.want)
 		}
-		t.Log("Random string: ", prev_gid1)
-	}
 
-	cn := client.Database("gotest").Collection("topics")
-	var pcn *mongo.Collection
-	if cn != pcn {
-		t.Logf("%v", cn)
-		pcn = cn
-	}
-	if !reflect.DeepEqual(pcn, cn) {
-		t.Errorf("Check client.Database() cn = nil %v, want = dtopic %v", pcn, dtopic)
-	}
+		cn := client.Database("gotest").Collection("topics")
+		if cn == nil {
+			t.Errorf("Check client.Database:(%v) = %v", cn, test.want)
+		}
+		var pcn *mongo.Collection
+		if cn != pcn {
+			t.Logf("%v", cn)
+			pcn = cn
+		}
 
-	var prev_opts *options.InsertManyOptions
-	opts := options.InsertMany().SetOrdered(false)
-	if !reflect.DeepEqual(opts, prev_opts) {
-		t.Logf("%v", opts)
-		prev_opts = opts
-	}
+		var prevOpts *options.InsertManyOptions
+		opts := options.InsertMany().SetOrdered(false)
+		if opts == nil {
+			t.Errorf("Check InsertMany:(%v) = %v", opts, test.want)
+		}
+		if !reflect.DeepEqual(opts, prevOpts) {
+			t.Logf("%v", opts)
+			prevOpts = opts
+		}
 
-	var prev_result *mongo.InsertManyResult
-	result, _ := cn.InsertMany(context.TODO(), dtopic, prev_opts)
-	if !reflect.DeepEqual(result, prev_result) {
-		t.Logf("%v", result)
-		prev_result = result
+		var prevResult *mongo.InsertManyResult
+		result, _ := cn.InsertMany(context.TODO(), dtopic, prevOpts)
+		if result == nil {
+			t.Errorf("Check InsertManyRun:(%v) = %v", result, test.want)
+		}
+		if !reflect.DeepEqual(result, prevResult) {
+			t.Logf("%v", result)
+			prevResult = result
+		}
+
 	}
 
 	var sltest = []struct {
-		res interface{}
+		res string
 	}{
-		{"result"},
+		{"result1"},
 		{"result2"},
 		{"result3"},
 		{"result4"},
 	}
 
-	var prev_res interface{}
+	var prev_res string
 	for _, test := range sltest {
 		if test.res != prev_res {
 			t.Logf("%v", test.res)
 			prev_res = test.res
 		}
-	}
 
-	testop := make([]string, 0)
-	for _, v := range prev_result.InsertedIDs {
-		if v != nil {
-			testop = append(testop, v.(string))
+		mp := make(map[int]string)
+		mp = map[int]string{
+			1: "result1",
+			2: "result2",
+			3: "result3",
+			4: "result3",
 		}
-		t.Logf("%v", testop)
+
+		sl := make([]string, 0, len(mp))
+		for _, v := range sl {
+			if v != prev_res {
+				sl = append(sl, v)
+			}
+			t.Logf("%v", sl)
+		}
 	}
 }
