@@ -13,6 +13,19 @@ import (
 
 func TestInserter(t *testing.T) {
 
+	saved := inserter
+	defer func() { inserter = saved }()
+
+	var dsnMongoTs string
+	var stuTs mgoChat
+	inserter = func(dsnMongo string, stu mgoChat) ([]string, []string, error) {
+		dsnMongoTs = dsnMongo
+		t.Log(dsnMongoTs)
+		stuTs = stu
+		t.Log(stuTs)
+		return nil, nil, nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	if ctx == nil && cancel != nil {
 		t.Errorf("Check func WithTimeout() ctx = nil %v, want cancel = nil %v", ctx, cancel)
@@ -36,9 +49,6 @@ func TestInserter(t *testing.T) {
 			t.Log("Disconnect not errors")
 		}
 	}()
-
-	saved := inserter
-	defer func() { inserter = saved }()
 
 	var gtests = []struct {
 		gid1   string
@@ -99,30 +109,28 @@ func TestInserter(t *testing.T) {
 			prev_insub2 = test.insub2
 		}
 
-		var prev_key int64
-		if test.key != prev_key {
+		var prevKey int64
+		if test.key != prevKey {
 			t.Logf("%v", test.key)
-			prev_key = test.key
+			prevKey = test.key
 		}
 
-		var pkey int64
-		if !reflect.DeepEqual(test.key, pkey) {
+		if !reflect.DeepEqual(test.key, prevKey) {
 			t.Logf("%v", test.key)
-			pkey = test.key
+			prevKey = test.key
 		}
 		keygot := time.Now().UTC().UnixNano()
 		if keygot == 0 {
-			t.Errorf("Check UnixNano:(%v) = %v", pkey, test.want)
+			t.Errorf("Check UnixNano:(%v) = %v", prevKey, test.want)
 		}
 
-		var prevKey int64
 		if test.key != prevKey {
 			t.Logf("%v", test.key)
 			test.key = prevKey
 		}
 		rngot := rand.New(rand.NewSource(keygot))
 		if rngot == nil {
-			t.Errorf("Check UnixNano:(%v) = %v", pkey, test.want)
+			t.Errorf("Check UnixNano:(%v) = %v", prevKey, test.want)
 		}
 
 		var prng *rand.Rand
@@ -157,7 +165,7 @@ func TestInserter(t *testing.T) {
 
 		var prevResult *mongo.InsertManyResult
 		result, _ := cn.InsertMany(context.TODO(), dtopic, prevOpts)
-		if result != nil {
+		if result == nil {
 			t.Errorf("Check InsertManyRun:(%v) = %v", result, test.want)
 		}
 		if !reflect.DeepEqual(result, prevResult) {
@@ -180,6 +188,80 @@ func TestInserter(t *testing.T) {
 				sl = append(sl, v)
 			}
 			t.Logf("%v", sl)
+		}
+	}
+}
+
+func BenchmarkInserter(b *testing.B) {
+
+	b.ReportAllocs()
+	for i := 0; i < 10; i++ {
+
+		saved := inserter
+		defer func() { inserter = saved }()
+
+		var dsnMongoTs string
+		var stuTs mgoChat
+		inserter = func(dsnMongo string, stu mgoChat) ([]string, []string, error) {
+			dsnMongoTs = dsnMongo
+			b.Log(dsnMongoTs)
+			stuTs = stu
+			b.Log(stuTs)
+			return nil, nil, nil
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		if ctx == nil && cancel != nil {
+			b.Errorf("Check func WithTimeout() ctx = nil %v, want cancel = nil %v", ctx, cancel)
+		}
+
+		client, err := mongo.Connect(ctx, options.Client().ApplyURI(dsnMongo))
+		if client == nil && err != nil {
+			b.Errorf("Check func mongo.Connect() client = nil %v, want err = nil %v", client, err)
+		}
+
+		defer func() {
+			if err = client.Disconnect(ctx); err != nil {
+				switch p := recover(); p {
+				case err != nil:
+					panic(err)
+					panic(p)
+				default:
+					panic(p)
+				}
+			} else {
+				b.Log("Disconnect not errors")
+			}
+		}()
+
+		cn := client.Database("gotest").Collection("topics")
+		if cn == nil {
+			b.Errorf("Check client.Database: %v", cn)
+		}
+		var pcn *mongo.Collection
+		if cn != pcn {
+			b.Logf("%v", cn)
+			pcn = cn
+		}
+
+		var prevOpts *options.InsertManyOptions
+		opts := options.InsertMany().SetOrdered(false)
+		if opts == nil {
+			b.Errorf("Check InsertMany: %v", opts)
+		}
+		if !reflect.DeepEqual(opts, prevOpts) {
+			b.Logf("%v", opts)
+			prevOpts = opts
+		}
+
+		var prevResult *mongo.InsertManyResult
+		result, _ := cn.InsertMany(context.TODO(), dtopic, prevOpts)
+		if result == nil {
+			b.Errorf("Check InsertManyRun: %v", result)
+		}
+		if !reflect.DeepEqual(result, prevResult) {
+			b.Logf("%v", result)
+			prevResult = result
 		}
 	}
 }
