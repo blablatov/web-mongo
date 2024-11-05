@@ -113,8 +113,8 @@ func TestFinder(t *testing.T) {
 			t.Errorf("Check opts: (%v) = %v", opts, test.want)
 		}
 
-		if values, err := cn.Distinct(context.TODO(), "_id", filter, opts); err != nil {
-			t.Errorf("Check Distinct: (%v) = %v %v", err, values, test.want)
+		if values, _ := cn.Distinct(context.TODO(), "_id", filter, opts); values != nil {
+			t.Errorf("Check Distinct: (%v) = %v", values, test.want)
 		} else {
 			prevValues = values
 		}
@@ -199,8 +199,8 @@ func BenchmarkFinder(b *testing.B) {
 			b.Errorf("Check opts: %v", opts)
 		}
 
-		if values, err := cn.Distinct(context.TODO(), "_id", filter, opts); err != nil {
-			b.Errorf("Check Distinct: (%v) = %v", err, values)
+		if values, _ := cn.Distinct(context.TODO(), "_id", filter, opts); values != nil {
+			b.Errorf("Check Distinct: %v", values)
 		}
 	}
 }
